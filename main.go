@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -22,7 +23,7 @@ var teams []Team // will store an array of Rolls'
 // This function will convert our slice into json and send it
 // to the response stream
 func getTeams(resp http.ResponseWriter, request *http.Request) {
-	teams = append(teams, Team{ID: "1111", ImageNumber: "898989", Name: "Real Madrid", League: "La Liga"})
+
 	log.Printf("You got hit!\n")
 	resp.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(resp).Encode(teams) // function encodes our slice obj into json and sends
@@ -61,6 +62,14 @@ func getTeam(resp http.ResponseWriter, request *http.Request) {
 func createTeam(resp http.ResponseWriter, request *http.Request) {
 	log.Printf("You got hit in the createTeam")
 	resp.Header().Set("Content-Type", "application/json")
+
+	var newTeam Team // this will contain the temp obj of the new team to add
+
+	json.NewDecoder(request.Body).Decode(&newTeam) // Reads our json data and stores it in our newTeam obj
+	newTeam.ID = strconv.Itoa(len(teams) + 1)      // creates and sets our newTeam's id
+
+	teams = append(teams, newTeam)        // add the value to our "DB" of teams
+	json.NewEncoder(resp).Encode(newTeam) // this sends the response to the client with our newTeam obj
 }
 
 func updateTeam(resp http.ResponseWriter, request *http.Request) {
@@ -73,6 +82,9 @@ func deleteTeam(resp http.ResponseWriter, request *http.Request) {
 
 func main() {
 	router := mux.NewRouter() // create a new router with mux
+
+	// simulate having something in our "DB"
+	teams = append(teams, Team{ID: "1", ImageNumber: "898989", Name: "Real Madrid", League: "La Liga"})
 
 	router.HandleFunc("/soccer/teams", getTeams).Methods("GET") // handle for our defualt entry point to server
 	router.HandleFunc("/soccer/teams/{id}", getTeam).Methods("GET")
