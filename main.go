@@ -95,17 +95,36 @@ func updateTeam(resp http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	// if the team wasn't found let the client know
+	// if the team wasn't found let the client and console know
 	if isFound == false {
-		// update team
 		log.Printf("Update Error: The team with that give id is not in our database.")
 		resp.Write([]byte("Could not find the team with the id: " + params["id"]))
 	}
 
 }
 
+// This function will remove an item from our
 func deleteTeam(resp http.ResponseWriter, request *http.Request) {
 	log.Printf("You got hit in the deleteRoll")
+	resp.Header().Set("Content-Type", "application/json")
+
+	params := mux.Vars(request)
+	isFound := false
+	for i, item := range teams {
+		if item.ID == params["id"] {
+			teams = append(teams[:i], teams[i+1:]...) // delete team from slice
+			isFound = true
+			break
+		}
+	}
+
+	// if the item was removed then we can respond with the updated teams list
+	if isFound == true {
+		json.NewEncoder(resp).Encode(teams)
+	} else {
+		log.Printf("Update Error: The team with that give id is not in our database.")
+		resp.Write([]byte("Could not find the team with the id: " + params["id"]))
+	}
 }
 
 func main() {
