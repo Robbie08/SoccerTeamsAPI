@@ -72,8 +72,36 @@ func createTeam(resp http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(resp).Encode(newTeam) // this sends the response to the client with our newTeam obj
 }
 
+// This Function will allow us to update a team based on the given
+// id provided by the request.
 func updateTeam(resp http.ResponseWriter, request *http.Request) {
 	log.Printf("You got hit in the updateTeam")
+	resp.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(request) // get our paramters from the request
+
+	isFound := false // flag for if the value is found
+
+	// iterate through teams and return the one with the same id
+	for i, item := range teams {
+		if item.ID == params["id"] {
+			var team Team                               // will contain the team we wish to update
+			teams = append(teams[:i], teams[i+1:]...)   // this removes the team from our slice
+			json.NewDecoder(request.Body).Decode(&team) // modified the team with the passed in params from request
+			team.ID = params["id"]                      // we want to keep the same id for this updated team
+			teams = append(teams, team)                 // add new team to the array
+			json.NewEncoder(resp).Encode(team)
+			isFound = true
+			break
+		}
+	}
+
+	// if the team wasn't found let the client know
+	if isFound == false {
+		// update team
+		log.Printf("Update Error: The team with that give id is not in our database.")
+		resp.Write([]byte("Could not find the team with the id: " + params["id"]))
+	}
+
 }
 
 func deleteTeam(resp http.ResponseWriter, request *http.Request) {
