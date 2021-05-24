@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"hash/fnv"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -65,8 +66,8 @@ func createTeam(resp http.ResponseWriter, request *http.Request) {
 
 	var newTeam Team // this will contain the temp obj of the new team to add
 
-	json.NewDecoder(request.Body).Decode(&newTeam) // Reads our json data and stores it in our newTeam obj
-	newTeam.ID = strconv.Itoa(len(teams) + 1)      // creates and sets our newTeam's id
+	json.NewDecoder(request.Body).Decode(&newTeam)     // Reads our json data and stores it in our newTeam obj
+	newTeam.ID = fmt.Sprint(generateUID(newTeam.Name)) // creates and sets our newTeam's id
 
 	teams = append(teams, newTeam)        // add the value to our "DB" of teams
 	json.NewEncoder(resp).Encode(newTeam) // this sends the response to the client with our newTeam obj
@@ -127,11 +128,20 @@ func deleteTeam(resp http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// This function will generate a Unique ID by using fnv lib.
+// @params str string: Name of the team we wish to create a UID for
+// @return uint64 : will be the UID for the given team as a uint64
+func generateUID(str string) uint64 {
+	uid := fnv.New64a()
+	uid.Write([]byte(str))
+	return uid.Sum64()
+}
+
 func main() {
 	router := mux.NewRouter() // create a new router with mux
 
 	// simulate having something in our "DB"
-	teams = append(teams, Team{ID: "1", ImageNumber: "898989", Name: "Real Madrid", League: "La Liga"})
+	teams = append(teams, Team{ID: fmt.Sprint(generateUID("Real Madrid")), ImageNumber: "898989", Name: "Real Madrid", League: "La Liga"})
 
 	router.HandleFunc("/soccer/teams", getTeams).Methods("GET") // handle for our defualt entry point to server
 	router.HandleFunc("/soccer/teams/{id}", getTeam).Methods("GET")
