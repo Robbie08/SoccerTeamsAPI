@@ -19,7 +19,7 @@ type Team struct {
 }
 
 // this slice will act as our temporary database
-var teams []Team // will store an array of Rolls'
+var teams []Team // will store an array of Teams'
 
 // This function will convert our slice into json and send it
 // to the response stream
